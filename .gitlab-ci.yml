@@ -1,0 +1,23 @@
+image: node:18-alpine
+
+cache:
+  paths:
+    - node_modules/
+
+before_script:
+  - apk add lftp
+  - npm install
+
+deploy_to_hostinger:
+  stage: deploy
+  script:
+    - npm run build
+    - lftp -c "set verify-certificate/$HOSTINGER_FTP_HOST no; set ftp:ssl-allow on; open -u $HOSTINGER_FTP_USER,$HOSTINGER_FTP_PASSWORD ftp://$HOSTINGER_FTP_HOST; mirror -Rev out/ public_html/ --ignore-time --parallel=10"
+  only:
+    - main
+    - master
+  variables:
+    # Add these in GitLab CI/CD settings:
+    # HOSTINGER_FTP_HOST: your-ftp-host
+    # HOSTINGER_FTP_USER: your-ftp-username  
+    # HOSTINGER_FTP_PASSWORD: your-ftp-password 
